@@ -1,3 +1,10 @@
 {
-
+    "title": "文档",
+    "author": "ShineMayfly",
+    "description": "一些学习文档和问题书籍",
+    "language": "zh-hans",
+    "gitbook": "3.2.3",
+    "plugins": [
+        "-sharing"
+    ]
 }
