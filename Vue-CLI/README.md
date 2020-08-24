@@ -124,7 +124,94 @@ $ npm install mockjs --save-dev
 
 搭建web server
 
+①、在项目根路径下创建mock文件夹,并创建图片中mock文件夹中的几个文件
+
+```file
+1、index.js
+2、util.js
+3、userInfo.json
+```
 
 
 
+②、index.js 文件
+
+```js
+	const Mock = require('mockjs');//mockjs 导入依赖模块
+    const util = require('./util');//自定义工具模块
+    //返回一个函数
+    module.exports = function(app){
+        //监听http请求
+        app.get('/user/userinfo', function (rep, res) {
+            //每次响应请求时读取mock data的json文件
+            //util.getJsonFile方法定义了如何读取json文件并解析成数据对象
+            var json = util.getJsonFile('./userInfo.json');
+            //将json传入 Mock.mock 方法中，生成的数据返回给浏览器
+            res.json(Mock.mock(json));
+        });
+    }
+```
+
+③、util.js 文件
+
+```js
+	const fs = require('fs');//引入文件系统模块
+    const path = require('path');//引入path模块
+    
+    module.exports = {
+        //读取json文件
+        getJsonFile:function (filePath) {
+            //读取指定json文件
+            var json = fs.readFileSync(path.resolve(__dirname,filePath), 'utf-8');
+            //解析并返回
+            return JSON.parse(json);
+        }
+    };
+```
+
+④、userInfo.json 文件
+
+```json
+	{
+        "error":0,
+        "data":{
+            "userid": "@id()",//随机生成用户id
+            "username": "@cname()",//随机生成中文名字
+            "date": "@date()",//随机生成日期
+            "avatar": "@image('200x200','red','#fff','avatar')",//生成图片
+            "description": "@paragraph()",//描述
+            "ip": "@ip()",//IP地址
+            "email": "@email()"//email
+        }
+    }
+```
+
+⑤、在路径build/webpack.dev.conf.js文件中的devServer属性中新添加一个before钩子函数,用来监听来自web的http请求。([关于devServer.before如何使用](https://www.webpackjs.com/configuration/dev-server/#devserver-before))
+
+```js
+	devServer: {
+        clientLogLevel: 'warning',
+        historyApiFallback: {
+          rewrites: [
+            { from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'index.html') },
+          ],
+        },
+        hot: true,
+        contentBase: false,
+        compress: true,
+        host: HOST || config.dev.host,
+        port: PORT || config.dev.port,
+        open: config.dev.autoOpenBrowser,
+        overlay: config.dev.errorOverlay
+          ? { warnings: false, errors: true }
+          : false,
+        publicPath: config.dev.assetsPublicPath,
+        proxy: config.dev.proxyTable,
+        quiet: true,
+        before: require('../mock'),//引入mock/index.js
+        watchOptions: {
+          poll: config.dev.poll,
+        }
+      },
+```
 
